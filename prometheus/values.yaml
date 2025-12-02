@@ -1,0 +1,28 @@
+# Prometheus settings
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelector: {}
+    podMonitorSelector: {}
+
+# Grafana settings
+grafana:
+  enabled: true
+  adminUser: admin
+  adminPassword: admin
+  service:
+    type: NodePort
+    nodePort: 30080
+
+# Alertmanager settings
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    configSecret: alertmanager-slack
+
+
+# Node Exporter & Kube State Metrics
+kubeStateMetrics:
+  enabled: true
+
+nodeExporter:
+  enabled: true

@@ -1,0 +1,61 @@
+
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: istio-rollout
+  namespace: demo
+spec:
+  replicas: 4 
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: istio-rollout
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+      labels:
+        app: istio-rollout
+        istio: monitor   ## to be scraped by pod monitor
+    spec:
+      containers:
+      - name: istio-rollout
+        image: argoproj/rollouts-demo:yellow
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 5m
+  strategy:
+    canary:
+    #  analysis will be performed in background, while rollout is progressing through its steps
+      analysis:
+        startingStep: 1   # index of step list, of when to start this analysis
+        templates:
+        - templateName: istio-success-rate
+        args:             # arguments allow AnalysisTemplates to be re-used
+        - name: service 
+          value: istio-rollout
+        - name: namespace
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+      trafficRouting:
+        istio:
+          virtualService:
+            name: istio-rollout-vsvc
+            routes:
+            - primary
+          destinationRule:
+            name: rollout-destrule    # required
+            canarySubsetName: canary  # required
+            stableSubsetName: stable  # required
+      steps:
+      - setWeight: 25
+      - pause: {duration: 50s}
+      - setWeight: 50
+      - pause: {duration: 30s}
+      - setWeight: 100
