@@ -1,22 +1,77 @@
-
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: istio-success-rate
+  name: istio-canary-quality
   namespace: demo
 spec:
-  # this analysis template requires a service name and namespace to be supplied to the query
   args:
   - name: service
   - name: namespace
+
   metrics:
+
+  # -----------------------
+  # 1. Success Rate (2xx)
+  # -----------------------
   - name: success-rate
-    initialDelay: 30s
+    initialDelay: 20s
     interval: 20s
-    successCondition: result[0] > 99
+    successCondition: result[0] > 0.99
+    failureCondition: result[0] < 0.95
     provider:
       prometheus:
         address: http://kube-prom-stack-kube-prome-prometheus.monitoring:9090
         query: |
-          100 * sum(rate(istio_requests_total{destination_service="istio-rollout-canary.demo.svc.cluster.local",response_code=~"2..", reporter="destination"}[1m])) 
-          / sum(rate(istio_requests_total{destination_service="istio-rollout-canary.demo.svc.cluster.local",reporter="destination"}[1m]))
+          sum(rate(istio_requests_total{
+            reporter="destination",
+            destination_service="istio-rollout-canary.demo.svc.cluster.local",
+            response_code=~"2.."
+          }[1m]))
+          /
+          sum(rate(istio_requests_total{
+            reporter="destination",
+            destination_service="istio-rollout-canary.demo.svc.cluster.local"
+          }[1m]))
+
+  # -----------------------
+  # 2. Failure Rate (5xx)
+  # -----------------------
+  - name: failure-rate-5xx
+    initialDelay: 20s
+    interval: 20s
+    successCondition: result[0] < 0.02   # < 2% is OK
+    failureCondition: result[0] > 0.05   # > 5% → rollback
+    provider:
+      prometheus:
+        address: http://kube-prom-stack-kube-prome-prometheus.monitoring:9090
+        query: |
+          sum(rate(istio_requests_total{
+            reporter="destination",
+            destination_service="istio-rollout-canary.demo.svc.cluster.local",
+            response_code=~"5.."
+          }[1m]))
+          /
+          sum(rate(istio_requests_total{
+            reporter="destination",
+            destination_service="istio-rollout-canary.demo.svc.cluster.local"
+          }[1m]))
+
+  # -----------------------
+  # 3. P95 Latency
+  # -----------------------
+  - name: latency-p95
+    initialDelay: 20s
+    interval: 20s
+    successCondition: result[0] < 500    # p95 < 500ms
+    failureCondition: result[0] > 800    # p95 > 800ms → rollback
+    provider:
+      prometheus:
+        address: http://kube-prom-stack-kube-prome-prometheus.monitoring:9090
+        query: |
+          histogram_quantile(
+            0.95,
+            sum(rate(istio_request_duration_milliseconds_bucket{
+              reporter="destination",
+              destination_service="istio-rollout-canary.demo.svc.cluster.local"
+            }[1m])) by (le)
+          )

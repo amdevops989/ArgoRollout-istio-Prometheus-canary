@@ -1,4 +1,5 @@
-## curling only canary pods : while true; do
+## curling only canary pods : 
+while true; do
   curl -H "x-canary: true" \
        -o /dev/null -s -w "%{http_code}\n" \
        http://frontend.localdev.me/
@@ -25,4 +26,17 @@ sum(rate(istio_requests_total{
 sum(rate(istio_requests_total{
   destination_service="istio-rollout-stable.demo.svc.cluster.local",reporter="destination",
   response_code=~"2..",reporter="destination"
+}[1m]))
+
+
+## Success Rate Canary %
+sum(rate(istio_requests_total{
+    reporter="destination",
+    destination_service_name="istio-rollout-canary",
+    response_code="200"
+}[1m]))
+/
+sum(rate(istio_requests_total{
+    reporter="destination",
+    destination_service_name="istio-rollout-canary"
 }[1m]))
