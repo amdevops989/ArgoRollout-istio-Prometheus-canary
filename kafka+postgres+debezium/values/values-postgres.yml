@@ -5,19 +5,21 @@ global:
       password: postgres
       database: mv100db
 
-# image:
-#   repository: bitnami/postgresql
-#   tag: 14
-#   pullPolicy: IfNotPresent
-
 primary:
   service:
     type: ClusterIP
     ports:
       postgresql: 5432
 
+  # -------------------------------
+  # ENABLE PERSISTENCE (PVC)
+  # -------------------------------
   persistence:
-    enabled: false    # ✅ disable persistence for Minikube to avoid PVC issues
+    enabled: true            # ✅ enable PVC
+    storageClass: "standard" # or "standard" (Minikube default)
+    size: 5Gi                # PVC size
+    accessModes:
+      - ReadWriteOnce
 
   extendedConfiguration: |
     wal_level = logical
@@ -25,6 +27,9 @@ primary:
     max_replication_slots = 10
     max_wal_size = 1GB
 
+  # -------------------------------
+  # MOUNT YOUR INIT SQL
+  # -------------------------------
   extraVolumes:
     - name: init-sql
       configMap:
