@@ -77,6 +77,16 @@ helm install redis bitnami/redis \
 
 
 
+helm install redis bitnami/redis \
+  --namespace kafka \
+  --create-namespace \
+  --set architecture=standalone \
+  --set auth.enabled=false \
+  --set replica.replicaCount=0 \
+  --set master.persistence.enabled=false \
+  --set service.type=NodePort \
+  --set service.nodePort=30379 \
+  --set service.port=6379
 
 
 ## installing debezium : 

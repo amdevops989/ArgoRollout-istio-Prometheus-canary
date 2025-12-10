@@ -10,22 +10,33 @@ spec:
     - api-gateway
   http:
     # ----------------------
-    # Auth service (canary ready)
+    # Catalog service (canary ready)
     # ----------------------
+    # Canary header-based routing
+    - name: catalog-canary-debug
+      match:
+        - headers:
+            x-canary:
+              exact: "true"
+      route:
+        - destination:
+            host: catalog-canary
+          weight: 100
+
     - name: auth-route
       match:
         - uri:
-            prefix: /auth
+            prefix: /catalog
       route:
         - destination:
-            host: auth.mv100.svc.cluster.local
+            host: catalog-stable
             port:
-              number: 3000
+              number: 3001
           weight: 100
         - destination:
-            host: auth-canary.mv100.svc.cluster.local
+            host: catalog-canary
             port:
-              number: 3000
+              number: 3001
           weight: 0
 
     # ----------------------

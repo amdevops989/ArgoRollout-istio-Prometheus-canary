@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: istio-rollout
-        image: devopsflow999/frontend:test32
+        image: devopsflow999/frontend:test400
         ports:
         - name: http
           containerPort: 80

@@ -8,7 +8,7 @@ spec:
   - istio-rollout-gateway
   hosts:
   - "frontend.localdev.me"
-  # - istio-rollout.local
+  -  istio-rollout
   http:
   - name: primary
     route:

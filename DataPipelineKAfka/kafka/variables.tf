@@ -1,17 +1,9 @@
+# ----------------------------
 # Variables
-# --------------------------------------------------
-variable "kafka_pvc_size" {
-  type    = string
-  default = "5Gi"
-}
-
-variable "storage_class" {
-  type    = string
-  default = "standard"
-}
+# ----------------------------
 
 variable "namespace" {
-  description = "Namespace to install kafka into"
+  description = "Namespace to install Kafka/Postgres into"
   type        = string
   default     = "kafka"
 }
@@ -22,7 +14,17 @@ variable "kubeconfig_path" {
   default     = ""
 }
 
+variable "storage_class" {
+  description = "Storage class for PVCs"
+  type        = string
+  default     = "standard"
+}
 
+variable "pvc_size" {
+  description = "PVC size for PostgreSQL"
+  type        = string
+  default     = "5Gi"
+}
 
 variable "postgres_password" {
   description = "Postgres superuser password"
@@ -45,13 +47,13 @@ variable "appuser_password" {
 }
 
 variable "dbz_replication_user" {
-  description = "Debezium/replication username"
+  description = "Debezium replication username"
   type        = string
   default     = "dbz"
 }
 
 variable "dbz_replication_password" {
-  description = "Debezium/replication password"
+  description = "Debezium replication password"
   type        = string
   default     = "dbz"
   sensitive   = true
@@ -63,10 +65,20 @@ variable "database_name" {
   default     = "mv100db"
 }
 
+variable "postgres_secret_name" {
+  description = "Name of Kubernetes Secret holding Postgres credentials"
+  type        = string
+  default     = "postgres-creds"
+}
 
+variable "postgres_image_tag" {
+  description = "PostgreSQL Docker image tag"
+  type        = string
+  default     = "15.4.0"
+}
 
-variable "pvc_size" {
-  description = "PVC size"
+variable "kafka_pvc_size" {
+  description = "PVC size for Kafka"
   type        = string
   default     = "5Gi"
 }
