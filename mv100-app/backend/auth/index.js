@@ -15,8 +15,9 @@ const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 const app = express();
 
 // Middleware
+// Middleware
 const corsOptions = {
-  origin: 'https://frontend.localdev.me', // must match exactly
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // <-- dynamic origin
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
   credentials: true, // allow cookies / auth headers

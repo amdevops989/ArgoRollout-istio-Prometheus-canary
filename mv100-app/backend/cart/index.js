@@ -30,13 +30,13 @@ const app = express();
 //   credentials: true,
 // }));
 
+// Middleware
 const corsOptions = {
-  origin: 'https://frontend.localdev.me', // exact URL of your frontend
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true, // required if using cookies or auth headers
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // <-- dynamic origin
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+  credentials: true, // allow cookies / auth headers
 };
-
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // preflight support
 app.use(bodyParser.json());

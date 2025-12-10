@@ -1,0 +1,96 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: auth
+  namespace: demo
+spec:
+  replicas: 2
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+      labels:
+        app: auth
+        istio: monitor
+    spec:
+      containers:
+      - name: auth
+        image: devopsflow999/auth:main-v0.1.8
+        env:
+          - name: PGUSER
+            value: appuser
+          - name: PGPASSWORD
+            value: appuser
+          - name: PGDATABASE
+            value: mv100db
+          - name: PGHOST
+            value: postgres-postgresql.kafka.svc.cluster.local
+          - name: PGPORT
+            value: "5432"
+          - name: REDIS_URL
+            value: redis-master.kafka.svc.cluster.local:6379
+          - name: KAFKA_BROKERS
+            value: kafka.kafka.svc.cluster.local:9092
+          - name: KAFKA_CLIENT_ID
+            value: auth-service
+          - name: KAFKA_TOPIC_PRODUCTS
+            value: mv100db_public_products
+          - name: LOG_LEVEL
+            value: info
+          - name: PORT
+            value: "3001"
+          - name: FRONTEND_URL
+            value: "http://frontend.localdev.me"  
+        ports:
+        - name: http
+          containerPort: 3001
+          protocol: TCP
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 5m
+  strategy:
+    canary:
+      canaryService: auth-canary
+      stableService: auth-stable
+      # analysis will be performed in background, while rollout is progressing through its steps
+      # analysis:
+      #   startingStep: 1   # index of step list, of when to start this analysis
+      #   templates:
+      #   - templateName: istio-success-rate
+        # args:             # arguments allow AnalysisTemplates to be re-used
+        # - name: service 
+        #   value: auth-canary
+        # - name: namespace
+        #   valueFrom:
+        #     fieldRef:
+        #       fieldPath: metadata.namespace
+      trafficRouting:
+        istio:
+          virtualService:
+            name: auth-vsvc
+            routes:
+            - auth-route
+      steps:
+      - setWeight: 10
+      - pause: {}         # pause indefinitely
+      - setWeight: 20
+      - pause: {duration: 20s}
+      - setWeight: 30
+      - pause: {duration: 20s}
+      - setWeight: 40
+      - pause: {duration: 20s}
+      - setWeight: 50
+      - pause: {duration: 20s}
+      - setWeight: 60
+      - pause: {duration: 20s}
+      - setWeight: 70
+      - pause: {duration: 20s}
+      - setWeight: 80
+      - pause: {duration: 20s}
+      - setWeight: 90
+      - pause: {duration: 20s}

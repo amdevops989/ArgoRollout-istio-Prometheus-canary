@@ -1,28 +1,55 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: istio-rollout
+  name: cart
   namespace: demo
 spec:
-  replicas: 4
+  replicas: 2
   revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: istio-rollout
+      app: cart
   template:
     metadata:
       annotations:
         sidecar.istio.io/inject: "true"
       labels:
-        app: istio-rollout
+        app: cart
         istio: monitor
     spec:
       containers:
-      - name: istio-rollout
-        image: devopsflow999/frontend:test400
+      - name: cart
+        image: devopsflow999/cart:main-v0.1.4
+        env:
+          - name: PGUSER
+            value: appuser
+          - name: PGPASSWORD
+            value: appuser
+          - name: PGDATABASE
+            value: mv100db
+          - name: PGHOST
+            value: postgres-postgresql.kafka.svc.cluster.local
+          - name: PGPORT
+            value: "5432"
+          - name: REDIS_URL
+            value: redis-master.kafka.svc.cluster.local:6379
+          - name: KAFKA_BROKERS
+            value: kafka.kafka.svc.cluster.local:9092
+          - name: KAFKA_CLIENT_ID
+            value: cart-service
+          - name: KAFKA_TOPIC_PRODUCTS
+            value: mv100db_public_products
+          - name: LOG_LEVEL
+            value: info
+          - name: JWT_SECRET
+            value: supersecretkey
+          - name: PORT
+            value: "3002"
+          - name: FRONTEND_URL
+            value: "http://frontend.localdev.me"  
         ports:
         - name: http
-          containerPort: 80
+          containerPort: 3002
           protocol: TCP
         resources:
           requests:
@@ -30,8 +57,8 @@ spec:
             cpu: 5m
   strategy:
     canary:
-      canaryService: istio-rollout-canary
-      stableService: istio-rollout-stable
+      canaryService: cart-canary
+      stableService: cart-stable
       # analysis will be performed in background, while rollout is progressing through its steps
       # analysis:
       #   startingStep: 1   # index of step list, of when to start this analysis
@@ -39,7 +66,7 @@ spec:
       #   - templateName: istio-success-rate
         # args:             # arguments allow AnalysisTemplates to be re-used
         # - name: service 
-        #   value: istio-rollout-canary
+        #   value: cart-canary
         # - name: namespace
         #   valueFrom:
         #     fieldRef:
@@ -47,9 +74,9 @@ spec:
       trafficRouting:
         istio:
           virtualService:
-            name: istio-rollout-vsvc
+            name: cart-vsvc
             routes:
-            - primary
+            - cart-route
       steps:
       - setWeight: 10
       - pause: {}         # pause indefinitely

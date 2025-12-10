@@ -4,7 +4,7 @@ metadata:
   name: catalog
   namespace: demo
 spec:
-  replicas: 4
+  replicas: 2
   revisionHistoryLimit: 2
   selector:
     matchLabels:
@@ -32,7 +32,7 @@ spec:
           - name: PGPORT
             value: "5432"
           - name: REDIS_URL
-            value: redis://redis-master.kafka.svc.cluster.local:6379
+            value: redis-master.kafka.svc.cluster.local:6379
           - name: KAFKA_BROKERS
             value: kafka.kafka.svc.cluster.local:9092
           - name: KAFKA_CLIENT_ID
